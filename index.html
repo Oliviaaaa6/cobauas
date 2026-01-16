@@ -1,0 +1,409 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <!-- Helps the browser identify support for mobile applications -->
+    <meta charset="utf-8" />
+
+    <meta
+      name="viewport"
+      content="initial-scale=1,user-scalable=no,maximum-scale=1,width=device-width"
+    />
+
+    <meta name="mobile-web-app-capable" content="yes" />
+    <meta name="apple-mobile-web-app-capable" content="yes" />
+    <!-- Title on the browser tab -->
+    <title>WebGIS Sebaran Masjid Daerah Jawa Tengah</title>
+    <!-- Leaflet CSS Library -->
+    <link
+      rel="stylesheet"
+      href="https://unpkg.com/leaflet@1.0.2/dist/leaflet.css"
+    />
+    <!-- Leaflet JavaScript Library -->
+    <script src="https://unpkg.com/leaflet@1.0.2/dist/leaflet.js"></script>
+    <!-- Style for the fullscreen map display -->
+    <style>
+      html,
+      body,
+      #map {
+        height: 100%;
+        width: 100%;
+        margin: 0px;
+      }
+
+      /* ===== JUDUL PETA (VERSI CUSTOM) ===== */
+      .judul-peta {
+        position: absolute;
+        top: 15px;
+        left: 50%;
+        transform: translateX(-50%);
+
+        /* --- GANTI WARNA DI SINI --- */
+        background: rgba(
+          27,
+          94,
+          32,
+          0.85
+        ); /* Hijau Masjid dengan transparansi 85% */
+        /* background: rgba(184, 134, 11, 0.85); -- Opsi jika ingin warna Emas -- */
+
+        color: white;
+
+        /* --- ATUR PANJANG DI SINI --- */
+        padding: 10px 40px; /* 10px atas-bawah, 40px kiri-kanan (biar makin panjang) */
+        min-width: 350px; /* Memaksa kotak punya panjang minimal tertentu */
+
+        border-radius: 12px; /* Sudut kotak lebih halus */
+        border: 2px solid #ffd700; /* Garis tepi emas tipis agar mewah */
+        z-index: 1000;
+        text-align: center;
+        box-shadow: 0 4px 15px rgba(0, 0, 0, 0.3);
+      }
+
+      .judul-peta h2 {
+        font-size: 20px;
+        margin: 0;
+        text-transform: uppercase; /* Membuat huruf besar semua agar tegas */
+        letter-spacing: 1px; /* Jarak antar huruf sedikit renggang */
+      }
+
+      .judul-peta p {
+        font-size: 15px;
+        margin: 5px 0 0 0;
+        opacity: 0.9;
+      }
+
+      /* Styling untuk Tombol Home */
+      .home-btn {
+        background-color: white;
+        padding: 8px 12px;
+        cursor: pointer;
+        border: 2px solid rgba(0, 0, 0, 0.2);
+        border-radius: 4px;
+        font-weight: bold;
+        color: #333;
+        background-clip: padding-box;
+        text-align: center;
+        box-shadow: 0 1px 5px rgba(0, 0, 0, 0.4);
+      }
+
+      .home-btn:hover {
+        background-color: #f4f4f4;
+      }
+
+      /* ===== LEGENDA ===== */
+      .legend {
+        background: white;
+        padding: 12px;
+        border-radius: 8px;
+        font-size: 12px;
+        line-height: 18px;
+      }
+
+      .legend i {
+        width: 18px;
+        height: 18px;
+        float: left;
+        margin-right: 8px;
+        opacity: 0.7;
+      }
+
+      /* Membuat kotak skala lebih kontras */
+      .leaflet-control-scale-line {
+        background: rgba(
+          255,
+          255,
+          255,
+          0.7
+        ); /* Memberi background putih transparan */
+        border: 2px solid #333; /* Mempertebal garis skala */
+        border-top: none; /* Gaya khas skala peta */
+        color: black; /* Warna teks angka */
+        font-weight: bold; /* Mempertebal angka skala */
+        font-size: 12px; /* Memperbesar ukuran teks */
+      }
+
+      /* ===== LABEL KAB/KOTA ===== */
+      .label-kab {
+        font-weight: bold;
+        color: black;
+        background: transparent;
+        border: none;
+        box-shadow: none;
+        font-size: 11px;
+      }
+
+      /* ===== NORTH ARROW ===== */
+      .north-arrow {
+        position: absolute;
+        top: 120px;
+        right: 20px;
+        width: 70px;
+        z-index: 1000;
+      }
+    </style>
+  </head>
+
+  <body>
+    <!-- HTML Block to display the map -->
+    <div class="judul-peta">
+      <h2>Sebaran Masjid</h2>
+      <p>Wilayah Jawa Tengah</p>
+    </div>
+
+    <!-- ARAH MATA ANGIN -->
+    <img src="assets/mataangin.png" class="north-arrow" />
+
+    <div id="map"></div>
+    <script>
+      /* Initial Map */
+      //lat, long, zoom (the initial view can be determined from Google Earth)
+      var map = L.map("map").setView([-7.15, 110.65], 9);
+      /* Tile Basemap */
+      var basemap0 = L.tileLayer(
+        "https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png",
+        {
+          maxZoom: 19,
+          attribution:
+            '&copy; <ahref="http://www.openstreetmap.org/copyright" > OpenStreetMap</a>',
+        }
+      );
+      basemap0.addTo(map);
+
+      var Esri_WorldImagery = L.tileLayer(
+        "https://server.arcgisonline.com/ArcGIS/rest/services/World_Imagery/MapServer/tile/{z}/{y}/{x}",
+        {
+          attribution: "Nama: Olivia Wahyu Ramadhani | NIM: 24611024",
+        }
+      );
+
+      var MtbMap = L.tileLayer(
+        "http://tile.mtbmap.cz/mtbmap_tiles/{z}/{x}/{y}.png",
+        {
+          attribution:
+            '&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> contributors &amp; USGS',
+        }
+      );
+
+      var Stadia_StamenWatercolor = L.tileLayer(
+        "https://tiles.stadiamaps.com/tiles/stamen_watercolor/{z}/{x}/{y}.{ext}",
+        {
+          minZoom: 1,
+          maxZoom: 16,
+          attribution:
+            '&copy; <a href="https://www.stadiamaps.com/" target="_blank">Stadia Maps</a> &copy; <a href="https://www.stamen.com/" target="_blank">Stamen Design</a> &copy; <a href="https://openmaptiles.org/" target="_blank">OpenMapTiles</a> &copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> contributors',
+          ext: "jpg",
+        }
+      );
+
+      // basemap0.addTo(map); //Calls the basemap to be displayed when the page is loaded
+      /*Control Layer*/
+      var baseMaps = {
+        "Open Street Map": basemap0,
+        "Open MTB MAP": MtbMap,
+        "Esri WorldImagery": Esri_WorldImagery,
+        Stadia_Stamen: Stadia_StamenWatercolor,
+      };
+
+      /* ================= SKALA ================= */
+      L.control
+        .scale({
+          position: "bottomright",
+          metric: true,
+        })
+        .addTo(map);
+
+      // 5) Tombol HOME
+      let lastBounds = null;
+      const HomeControl = L.Control.extend({
+        options: { position: "topleft" },
+        onAdd: function () {
+          const div = L.DomUtil.create("div", "home-btn");
+          div.innerHTML = "Home";
+          div.onclick = () => {
+            if (lastBounds) map.fitBounds(lastBounds, { padding: [40, 40] });
+            else map.setView([-8.65, 117.35], 8);
+          };
+          return div;
+        },
+      });
+      map.addControl(new HomeControl());
+
+      var Layers = {};
+      var layerControl = L.control.layers(baseMaps, Layers, {
+        collapsed: false,
+      });
+      layerControl.addTo(map);
+
+      // List of Locations: array of objects (30 Masjid Semarang)
+      var locations = [
+        {
+          name: "Masjid Besar Al-Atiiq Kauman Salatiga",
+          lat: -7.329246,
+          lng: 110.503252,
+        },
+        { name: "Masjid Raya Baiturrahman", lat: -6.9904, lng: 110.4225 },
+        { name: "Masjid Kauman Semarang", lat: -6.9733, lng: 110.4207 },
+        { name: "Masjid Jami' Pekojan", lat: -6.9696, lng: 110.4235 },
+        {
+          name: "Masjid As-Safinatun Najah (Masjid Kapal)",
+          lat: -7.0255,
+          lng: 110.3345,
+        },
+        { name: "Masjid Taqwa Sekayu", lat: -6.9822, lng: 110.4156 },
+        { name: "Masjid Menara Layur", lat: -6.9667, lng: 110.4217 },
+        { name: "Masjid Jami' Jatingaleh", lat: -7.0264, lng: 110.4192 },
+        { name: "Masjid Al-Azhar LPMP", lat: -7.0601, lng: 110.4355 },
+        { name: "Masjid At-Taqwa Banyumanik", lat: -7.0635, lng: 110.415 },
+        { name: "Masjid Al-Ikhlas Tembalang", lat: -7.049, lng: 110.4401 },
+        { name: "Masjid Kampus UNDIP", lat: -7.0519, lng: 110.4371 },
+        {
+          name: "Masjid Baitul Muttaqin Genuk",
+          lat: -6.9585,
+          lng: 110.4811,
+        },
+        { name: "Masjid Besar Terboyo", lat: -6.9535, lng: 110.4468 },
+        { name: "Masjid Jami' Al-Hidayah", lat: -6.9985, lng: 110.3955 },
+        {
+          name: "Masjid Ash-Shiddiq Karangrejo",
+          lat: -7.0205,
+          lng: 110.4132,
+        },
+        {
+          name: "Masjid Al-Ishlah Pedurungan",
+          lat: -7.0055,
+          lng: 110.4712,
+        },
+        { name: "Masjid Baitul Makmur", lat: -7.0125, lng: 110.4522 },
+        { name: "Masjid Al-Mustaghfirin", lat: -7.0315, lng: 110.4682 },
+        { name: "Masjid Nurul Iman Manyaran", lat: -7.0065, lng: 110.3785 },
+        {
+          name: "Masjid Baiturrahim Ngaliyan",
+          lat: -7.0015,
+          lng: 110.3425,
+        },
+        { name: "Masjid Al-Hikmah Mijen", lat: -7.0455, lng: 110.3015 },
+        { name: "Masjid Al-Falah Tugu", lat: -6.9655, lng: 110.3155 },
+        { name: "Masjid Istiqomah Gayamsari", lat: -6.9915, lng: 110.4485 },
+        { name: "Masjid Al-Ittihad", lat: -7.0185, lng: 110.3855 },
+        { name: "Masjid Baitus Salam", lat: -6.9855, lng: 110.4312 },
+        { name: "Masjid Baitul Quddus", lat: -7.0155, lng: 110.4222 },
+        { name: "Masjid Jami' Manarul Huda", lat: -6.840741, lng: 110.871212 },
+        { name: "Masjid Agung Demak", lat: -6.894556, lng: 110.637043 },
+        { name: "Masjid Darul Muttaqin", lat: -6.796611, lng: 110.7914543 },
+      ];
+
+      var customIcon1 = L.icon({
+        iconUrl: "assets/logomasjid.png", // dari lokal
+        iconSize: [20, 20],
+      });
+
+      // Loop for marker
+      locations.forEach(function (loc) {
+        var marker = L.marker([loc.lat, loc.lng], { icon: customIcon1 });
+        marker.bindPopup("<b>" + loc.name + "</b>");
+        marker.addTo(map);
+        marker.bindTooltip("<b>" + loc.name + "</b>");
+      });
+
+      fetch("assets/jat-wilayah.geojson") // file name
+        .then((res) => res.json())
+        .then((geojsonData) => {
+          L.geoJSON(geojsonData, {
+            style: {
+              color: "#5d4037",
+              weight: 1.5,
+              fillColor: "#efebe9",
+              fillOpacity: 0.1,
+            },
+          }).addTo(map);
+        })
+        .catch((err) => console.warn("Gagal muat batas wilayah:", err));
+
+      // === FUNGSI WARNA (SEMUA DIBEDAKAN) ===
+      function getColor(kab_kota) {
+        return kab_kota === "Kota Salatiga"
+          ? "#e53935" // merah
+          : kab_kota === "Kudus"
+          ? "#1e88e5" // biru
+          : kab_kota === "Demak"
+          ? "#43a047" // hijau
+          : kab_kota === "Temanggung"
+          ? "#fdd835" // kuning
+          : kab_kota === "Boyolali"
+          ? "#8e24aa" // ungu
+          : kab_kota === "Grobogan"
+          ? "#fb8c00" // oranye
+          : kab_kota === "Semarang"
+          ? "#00acc1" // biru toska
+          : kab_kota === "Kota Semarang"
+          ? "#6d4c41" // coklat
+          : kab_kota === "Kendal"
+          ? "#3949ab" // biru tua
+          : kab_kota === "Sragen"
+          ? "#c2185b" // pink tua
+          : "#9e9e9e"; // default abu-abu
+      }
+
+      // === MUAT GEOJSON ===
+      fetch("assets/jat-wilayah.geojson")
+        .then((res) => res.json())
+        .then((data) => {
+          L.geoJSON(data, {
+            style: function (feature) {
+              return {
+                fillColor: getColor(feature.properties.kab_kota), // ← SESUAIKAN!
+                color: "#000",
+                weight: 1,
+                fillOpacity: 0.2,
+              };
+            },
+            onEachFeature: function (feature, layer) {
+              if (feature.properties.kab_kota) {
+                layer.bindPopup("<b>" + feature.properties.kab_kota + "</b>");
+              }
+            },
+          }).addTo(map);
+        });
+
+      /* ================= LEGENDA 10 WILAYAH ================= */
+      var legend = L.control({ position: "bottomleft" });
+
+      legend.onAdd = function () {
+        var div = L.DomUtil.create("div", "legend");
+        div.innerHTML += "<b>Legenda Wilayah</b><hr>";
+
+        // Daftar 10 Wilayah & Warna (Pastikan kodenya sama dengan fungsi getColor)
+        var categories = [
+          { name: "Kota Semarang", color: "#6d4c41" },
+          { name: "Demak", color: "#43a047" },
+          { name: "Kendal", color: "#3949ab" },
+          { name: "Kota Salatiga", color: "#e53935" },
+          { name: "Kudus", color: "#1e88e5" },
+          { name: "Temanggung", color: "#fdd835" },
+          { name: "Boyolali", color: "#8e24aa" },
+          { name: "Grobogan", color: "#fb8c00" },
+          { name: "Kab. Semarang", color: "#00acc1" },
+          { name: "Sragen", color: "#c2185b" },
+        ];
+
+        // Looping untuk membuat list warna bulat agar estetik
+        categories.forEach(function (item) {
+          div.innerHTML +=
+            '<i style="background:' +
+            item.color +
+            '; width: 12px; height: 12px; border-radius: 50%; display: inline-block; margin-right: 8px;"></i> ' +
+            item.name +
+            "<br>";
+        });
+
+        div.innerHTML +=
+          '<hr><img src="assets/logomasjid.png" width="16" style="margin-right: 8px;"> Masjid';
+        return div;
+      };
+
+      legend.addTo(map);
+
+      legend.addTo(map);
+    </script>
+  </body>
+</html>
