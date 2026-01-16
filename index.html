@@ -1,0 +1,316 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <!-- Helps the browser identify support for mobile applications -->
+    <meta charset="utf-8" />
+
+    <meta
+      name="viewport"
+      content="initial-scale=1,user-scalable=no,maximum-scale=1,width=device-width"
+    />
+
+    <meta name="mobile-web-app-capable" content="yes" />
+    <meta name="apple-mobile-web-app-capable" content="yes" />
+    <!-- Title on the browser tab -->
+    <title>WebGIS Sebaran Masjid Daerah Jawa Tengah</title>
+    <!-- Leaflet CSS Library -->
+    <link
+      rel="stylesheet"
+      href="https://unpkg.com/leaflet@1.0.2/dist/leaflet.css"
+    />
+    <!-- Leaflet JavaScript Library -->
+    <script src="https://unpkg.com/leaflet@1.0.2/dist/leaflet.js"></script>
+    <!-- Style for the fullscreen map display -->
+    <style>
+      html,
+      body,
+      #map {
+        height: 100%;
+        width: 100%;
+        margin: 0px;
+      }
+
+      /* ===== JUDUL PETA ===== */
+      .judul-peta {
+        position: absolute;
+        top: 20px;
+        left: 50%;
+        transform: translateX(-50%);
+        background: #0d47a1;
+        color: white;
+        padding: 15px 30px;
+        border-radius: 10px;
+        min-width: 320px;
+        z-index: 1000;
+        text-align: center;
+      }
+
+      /* ===== LEGENDA ===== */
+      .legend {
+        background: white;
+        padding: 12px;
+        border-radius: 8px;
+        font-size: 12px;
+        line-height: 18px;
+      }
+
+      .legend i {
+        width: 18px;
+        height: 18px;
+        float: left;
+        margin-right: 8px;
+        opacity: 0.7;
+      }
+
+      /* ===== LABEL KAB/KOTA ===== */
+      .label-kab {
+        font-weight: bold;
+        color: black;
+        background: transparent;
+        border: none;
+        box-shadow: none;
+        font-size: 11px;
+      }
+
+      /* ===== NORTH ARROW ===== */
+      .north-arrow {
+        position: absolute;
+        top: 120px;
+        right: 20px;
+        width: 70px;
+        z-index: 1000;
+      }
+    </style>
+  </head>
+
+  <body>
+    <!-- HTML Block to display the map -->
+    <div class="judul-peta">
+      <h2>Sebaran Masjid</h2>
+      <p>Daerah Jawa Tengah</p>
+    </div>
+
+    <!-- ARAH MATA ANGIN -->
+    <img src="assets/mataangin.png" class="north-arrow" />
+
+    <div id="map"></div>
+    <script>
+      /* Initial Map */
+      //lat, long, zoom (the initial view can be determined from Google Earth)
+      var map = L.map("map").setView([-6.99, 110.42], 11);
+      /* Tile Basemap */
+      var basemap0 = L.tileLayer(
+        "https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png",
+        {
+          maxZoom: 19,
+          attribution:
+            '&copy; <ahref="http://www.openstreetmap.org/copyright" > OpenStreetMap</a>',
+        }
+      );
+      basemap0.addTo(map);
+
+      var Esri_WorldImagery = L.tileLayer(
+        "https://server.arcgisonline.com/ArcGIS/rest/services/World_Imagery/MapServer/tile/{z}/{y}/{x}",
+        {
+          attribution: "Nama: Olivia Wahyu Ramadhani | NIM: 24611024",
+        }
+      );
+
+      var MtbMap = L.tileLayer(
+        "http://tile.mtbmap.cz/mtbmap_tiles/{z}/{x}/{y}.png",
+        {
+          attribution:
+            '&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> contributors &amp; USGS',
+        }
+      );
+
+      var Stadia_StamenWatercolor = L.tileLayer(
+        "https://tiles.stadiamaps.com/tiles/stamen_watercolor/{z}/{x}/{y}.{ext}",
+        {
+          minZoom: 1,
+          maxZoom: 16,
+          attribution:
+            '&copy; <a href="https://www.stadiamaps.com/" target="_blank">Stadia Maps</a> &copy; <a href="https://www.stamen.com/" target="_blank">Stamen Design</a> &copy; <a href="https://openmaptiles.org/" target="_blank">OpenMapTiles</a> &copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> contributors',
+          ext: "jpg",
+        }
+      );
+
+      // basemap0.addTo(map); //Calls the basemap to be displayed when the page is loaded
+      /*Control Layer*/
+      var baseMaps = {
+        "Open Street Map": basemap0,
+        "Open MTB MAP": MtbMap,
+        "Esri WorldImagery": Esri_WorldImagery,
+        Stadia_Stamen: Stadia_StamenWatercolor,
+      };
+
+      /* ================= SKALA ================= */
+      L.control
+        .scale({
+          position: "bottomright",
+          metric: true,
+        })
+        .addTo(map);
+
+      var Layers = {};
+      var layerControl = L.control.layers(baseMaps, Layers, {
+        collapsed: false,
+      });
+      layerControl.addTo(map);
+
+      var marker = L.marker([-6.9904, 110.4225]); // you can change the coordinate
+      marker.bindPopup("<b>Hello ! </b> <br> Saya Marker");
+      marker.addTo(map);
+      marker.openPopup();
+      marker.bindTooltip(
+        "Hallo <br> Saya <b> Olivia </b> dan nama lain saya <b> Wahyu </b>"
+      );
+
+      // List of Locations: array of objects (30 Masjid Semarang)
+      var locations = [
+        {
+          name: "1. Masjid Agung Jawa Tengah (MAJT)",
+          lat: -6.9838,
+          lng: 110.4452,
+        },
+        { name: "2. Masjid Raya Baiturrahman", lat: -6.9904, lng: 110.4225 },
+        { name: "3. Masjid Kauman Semarang", lat: -6.9733, lng: 110.4207 },
+        { name: "4. Masjid Jami' Pekojan", lat: -6.9696, lng: 110.4235 },
+        {
+          name: "5. Masjid As-Safinatun Najah (Masjid Kapal)",
+          lat: -7.0255,
+          lng: 110.3345,
+        },
+        { name: "6. Masjid Taqwa Sekayu", lat: -6.9822, lng: 110.4156 },
+        { name: "7. Masjid Menara Layur", lat: -6.9667, lng: 110.4217 },
+        { name: "8. Masjid Jami' Jatingaleh", lat: -7.0264, lng: 110.4192 },
+        { name: "9. Masjid Al-Azhar LPMP", lat: -7.0601, lng: 110.4355 },
+        { name: "10. Masjid At-Taqwa Banyumanik", lat: -7.0635, lng: 110.415 },
+        { name: "11. Masjid Al-Ikhlas Tembalang", lat: -7.049, lng: 110.4401 },
+        { name: "12. Masjid Kampus UNDIP", lat: -7.0519, lng: 110.4371 },
+        {
+          name: "13. Masjid Baitul Muttaqin Genuk",
+          lat: -6.9585,
+          lng: 110.4811,
+        },
+        { name: "14. Masjid Besar Terboyo", lat: -6.9535, lng: 110.4468 },
+        { name: "15. Masjid Jami' Al-Hidayah", lat: -6.9985, lng: 110.3955 },
+        {
+          name: "16. Masjid Ash-Shiddiq Karangrejo",
+          lat: -7.0205,
+          lng: 110.4132,
+        },
+        {
+          name: "17. Masjid Al-Ishlah Pedurungan",
+          lat: -7.0055,
+          lng: 110.4712,
+        },
+        { name: "18. Masjid Baitul Makmur", lat: -7.0125, lng: 110.4522 },
+        { name: "19. Masjid Al-Mustaghfirin", lat: -7.0315, lng: 110.4682 },
+        { name: "20. Masjid Nurul Iman Manyaran", lat: -7.0065, lng: 110.3785 },
+        {
+          name: "21. Masjid Baiturrahim Ngaliyan",
+          lat: -7.0015,
+          lng: 110.3425,
+        },
+        { name: "22. Masjid Al-Hikmah Mijen", lat: -7.0455, lng: 110.3015 },
+        { name: "23. Masjid Al-Falah Tugu", lat: -6.9655, lng: 110.3155 },
+        { name: "24. Masjid Istiqomah Gayamsari", lat: -6.9915, lng: 110.4485 },
+        { name: "25. Masjid Al-Ittihad", lat: -7.0185, lng: 110.3855 },
+        { name: "26. Masjid Baitus Salam", lat: -6.9855, lng: 110.4312 },
+        { name: "27. Masjid Baitul Quddus", lat: -7.0155, lng: 110.4222 },
+        { name: "28. Masjid Nurul Huda", lat: -7.0385, lng: 110.4022 },
+        { name: "29. Masjid Al-Kautsar", lat: -6.9785, lng: 110.4555 },
+        { name: "30. Masjid Darussalam", lat: -7.0225, lng: 110.4855 },
+      ];
+
+      var customIcon1 = L.icon({
+        iconUrl: "assets/logo masjid.jpg", // dari lokal
+        iconSize: [20, 20],
+      });
+
+      // Loop for marker
+      locations.forEach(function (loc) {
+        var marker = L.marker([loc.lat, loc.lng], { icon: customIcon1 });
+        marker.bindPopup("<b>" + loc.name + "</b>");
+        marker.addTo(map);
+        marker.bindTooltip("<b>" + loc.name + "</b>");
+      });
+
+      fetch("assets/jateng-wilayah.geojson") // file name
+        .then((res) => res.json())
+        .then((geojsonData) => {
+          L.geoJSON(geojsonData, {
+            style: {
+              color: "#5d4037",
+              weight: 1.5,
+              fillColor: "#efebe9",
+              fillOpacity: 0.1,
+            },
+          }).addTo(map);
+        })
+        .catch((err) => console.warn("Gagal muat batas wilayah:", err));
+
+      // === FUNGSI WARNA (SEMUA DIBEDAKAN) ===
+      function getColor(kab) {
+        return kab === "Kota Salatiga"
+          ? "#e53935" // merah
+          : kab === "Kudus"
+          ? "#1e88e5" // biru
+          : kab === "Demak"
+          ? "#43a047" // hijau
+          : kab === "Temanggung"
+          ? "#fdd835" // kuning
+          : kab === "Boyolali"
+          ? "#8e24aa" // ungu
+          : kab === "Grobogan"
+          ? "#fb8c00" // oranye
+          : kab === "Semarang"
+          ? "#00acc1" // biru toska
+          : kab === "Kota Semarang"
+          ? "#6d4c41" // coklat
+          : kab === "Kendal"
+          ? "#3949ab" // biru tua
+          : kab === "Sragen"
+          ? "#c2185b" // pink tua
+          : "#9e9e9e"; // default abu-abu
+      }
+
+      // === MUAT GEOJSON ===
+      fetch("assets/jateng-wilayah.geojson")
+        .then((res) => res.json())
+        .then((data) => {
+          L.geoJSON(data, {
+            style: function (feature) {
+              return {
+                fillColor: getColor(feature.properties.kab_kota), // ← SESUAIKAN!
+                color: "#000",
+                weight: 1,
+                fillOpacity: 0.2,
+              };
+            },
+            onEachFeature: function (feature, layer) {
+              if (feature.properties.kab_kota) {
+                layer.bindPopup("<b>" + feature.properties.kab_kota + "</b>");
+              }
+            },
+          }).addTo(map);
+        });
+
+      /* ================= LEGENDA ================= */
+      var legend = L.control({ position: "bottomleft" });
+
+      legend.onAdd = function () {
+        var div = L.DomUtil.create("div", "legend");
+        div.innerHTML += "<b>Legenda</b><br>";
+        div.innerHTML += '<i style="background:#6d4c41"></i> Kota Semarang<br>';
+        div.innerHTML += '<i style="background:#43a047"></i> Demak<br>';
+        div.innerHTML += '<i style="background:#3949ab"></i> Kendal<br>';
+        div.innerHTML += '<img src="assets/logo masjid.jpg" width="16"> Masjid';
+        return div;
+      };
+
+      legend.addTo(map);
+    </script>
+  </body>
+</html>
